@@ -3,7 +3,6 @@ package com.example.studentmanagement.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.studentmanagement.model.Course;
@@ -27,64 +25,50 @@ public class CourseController {
 
     private final CourseService courseService;
 
-    @Autowired
     public CourseController(CourseService courseService) {
         this.courseService = courseService;
     }
 
-    // POST: Create new course
+    // CREATE
     @PostMapping
     public ResponseEntity<Course> createCourse(@RequestBody Course course) {
-        Course createdCourse = courseService.addCourse(course);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
+        course.setId(null); // 🔥 prevent accidental merge
+        Course created = courseService.addCourse(course);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // GET: Fetch all courses
+    // READ ALL
     @GetMapping
     public ResponseEntity<List<Course>> getAllCourses() {
-        List<Course> courses = courseService.getAllCourses();
-        return ResponseEntity.ok(courses);
+        return ResponseEntity.ok(courseService.getAllCourses());
     }
 
-    // GET: Fetch course by ID
+    // READ BY ID
     @GetMapping("/{id}")
     public ResponseEntity<Course> getCourseById(@PathVariable UUID id) {
-        Course course = courseService.getCourseById(id);
-        return ResponseEntity.ok(course);
+        return ResponseEntity.ok(courseService.getCourseById(id));
     }
 
-    // GET: Fetch course by course code
-    @GetMapping("/code/{courseCode}")
-    public ResponseEntity<Course> getCourseByCourseCode(@PathVariable String courseCode) {
-        Course course = courseService.getCourseByCourseCode(courseCode);
-        return ResponseEntity.ok(course);
-    }
-
-    // GET: Search courses by name
-    @GetMapping("/search")
-    public ResponseEntity<List<Course>> searchCourses(@RequestParam String name) {
-        List<Course> courses = courseService.searchCoursesByName(name);
-        return ResponseEntity.ok(courses);
-    }
-
-    // PUT: Update course
+    // UPDATE
     @PutMapping("/{id}")
-    public ResponseEntity<Course> updateCourse(@PathVariable UUID id, @RequestBody Course course) {
-        Course updatedCourse = courseService.updateCourse(id, course);
-        return ResponseEntity.ok(updatedCourse);
+    public ResponseEntity<Course> updateCourse(
+            @PathVariable UUID id,
+            @RequestBody Course course) {
+
+        Course updated = courseService.updateCourse(id, course);
+        return ResponseEntity.ok(updated);
     }
 
-    // DELETE: Delete course
+    // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCourse(@PathVariable UUID id) {
         courseService.deleteCourse(id);
         return ResponseEntity.noContent().build();
     }
 
-    // GET: Check if course exists
-    @GetMapping("/{id}/exists")
+    // EXISTS
+    @GetMapping("/exists/{id}")
     public ResponseEntity<Boolean> courseExists(@PathVariable UUID id) {
-        boolean exists = courseService.courseExists(id);
-        return ResponseEntity.ok(exists);
+        return ResponseEntity.ok(courseService.courseExists(id));
     }
 }
