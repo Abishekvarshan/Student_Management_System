@@ -1,0 +1,27 @@
+services:
+  studentmanagement:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      # Defaults (can still be overridden via .env)
+      SPRING_JPA_SHOW_SQL: "${SPRING_JPA_SHOW_SQL:-true}"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: "${SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:-org.hibernate.dialect.PostgreSQLDialect}"
+
+      # Your custom properties (mapped from env -> application properties)
+      SUPABASE_URL: "${SUPABASE_URL:-}"
+      SUPABASE_KEY: "${SUPABASE_KEY:-}"
+
+      # JWT (maps to security.jwt.*)
+      SECURITY_JWT_SECRET: "${SECURITY_JWT_SECRET}"
+      SECURITY_JWT_EXPIRATION_MS: "${SECURITY_JWT_EXPIRATION_MS:-86400000}"
+
+      # DB
+      SPRING_DATASOURCE_URL: "${SPRING_DATASOURCE_URL}"
+      SPRING_DATASOURCE_USERNAME: "${SPRING_DATASOURCE_USERNAME}"
+      SPRING_DATASOURCE_PASSWORD: "${SPRING_DATASOURCE_PASSWORD}"
