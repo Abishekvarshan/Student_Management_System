@@ -1,40 +1,45 @@
 # syntax=docker/dockerfile:1
 
+### =========================
 ### Build stage
+### =========================
 FROM eclipse-temurin:21-jdk AS build
 
 WORKDIR /app
 
-# Copy Maven wrapper + pom first for better caching
+# Install curl (needed sometimes by mvnw)
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Copy Maven wrapper + pom first (better layer caching)
 COPY mvnw mvnw
 COPY .mvn .mvn
 COPY pom.xml pom.xml
 
-# Pre-fetch dependencies (will be cached unless pom changes)
+# 🔥 Fix: give execute permission to mvnw
+RUN chmod +x mvnw
+
+# Pre-fetch dependencies
 RUN ./mvnw -q -DskipTests dependency:go-offline
 
-# Copy sources
+# Copy source code
 COPY src src
 
 # Build fat jar
 RUN ./mvnw -q -DskipTests package
 
+
+### =========================
 ### Runtime stage
+### =========================
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-# Spring Boot listens on 8080 by default
+# Spring Boot default port
 EXPOSE 8080
 
-# Copy built jar
+# Copy the built jar from build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# You should pass DB/JWT settings via env vars at runtime.
-# Example:
-#   -e SPRING_DATASOURCE_URL=...
-#   -e SPRING_DATASOURCE_USERNAME=...
-#   -e SPRING_DATASOURCE_PASSWORD=...
-#   -e SECURITY_JWT_SECRET=...
-
+# Run app
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
