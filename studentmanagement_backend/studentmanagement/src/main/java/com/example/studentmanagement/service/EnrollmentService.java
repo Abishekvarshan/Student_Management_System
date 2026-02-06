@@ -1,5 +1,10 @@
 package com.example.studentmanagement.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,12 +13,9 @@ import com.example.studentmanagement.exception.EnrollmentAlreadyExistsException;
 import com.example.studentmanagement.exception.EnrollmentNotFoundException;
 import com.example.studentmanagement.model.Course;
 import com.example.studentmanagement.model.Enrollment;
+import com.example.studentmanagement.model.EnrollmentStatus;
 import com.example.studentmanagement.model.Student;
 import com.example.studentmanagement.repository.EnrollmentRepository;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 public class EnrollmentService {
@@ -31,24 +33,27 @@ public class EnrollmentService {
         this.courseService = courseService;
     }
 
-    // Enroll a student in a course
+    /**
+     * Student enrollment request flow.
+     * Creates an enrollment with {@link EnrollmentStatus#REQUESTED}.
+     */
     @Transactional
-    public Enrollment enrollStudent(UUID studentId, UUID courseId) {
+    public Enrollment requestEnrollment(UUID studentId, UUID courseId) {
         Student student = studentService.getStudentById(studentId);
         Course course = courseService.getCourseById(courseId);
 
-        // Check if already enrolled
-        if (enrollmentRepository.existsByStudentAndCourse(student, course)) {
+        // Prevent duplicate enrollment requests/enrollments
+        if (enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId)) {
             throw new EnrollmentAlreadyExistsException(
-                "Student '" + student.getName() + "' is already enrolled in course '" + course.getCourseName() + "'"
-            );
+                    "Enrollment already exists (requested/approved/rejected) for this student and course");
         }
 
         Enrollment enrollment = new Enrollment();
         enrollment.setStudent(student);
         enrollment.setCourse(course);
         enrollment.setEnrollmentDate(LocalDate.now());
-        enrollment.setStatus("ACTIVE");
+        enrollment.setStatus(EnrollmentStatus.REQUESTED);
+        enrollment.setApprovedAt(null);
 
         return enrollmentRepository.save(enrollment);
     }
@@ -62,6 +67,16 @@ public class EnrollmentService {
     public Enrollment getEnrollmentById(UUID id) {
         return enrollmentRepository.findById(id)
                 .orElseThrow(() -> new EnrollmentNotFoundException("Enrollment not found with id: " + id));
+    }
+
+    public Enrollment getEnrollmentByStudentAndCourse(UUID studentId, UUID courseId) {
+        // Ensure student & course exist (meaningful 404s if not)
+        studentService.getStudentById(studentId);
+        courseService.getCourseById(courseId);
+
+        return enrollmentRepository.findByStudentIdAndCourseId(studentId, courseId)
+                .orElseThrow(() -> new EnrollmentNotFoundException(
+                        "Enrollment not found for studentId=" + studentId + " and courseId=" + courseId));
     }
 
     // Get all enrollments for a student
@@ -79,7 +94,7 @@ public class EnrollmentService {
     }
 
     // Get enrollments by status
-    public List<Enrollment> getEnrollmentsByStatus(String status) {
+    public List<Enrollment> getEnrollmentsByStatus(EnrollmentStatus status) {
         return enrollmentRepository.findByStatus(status);
     }
 
@@ -93,9 +108,38 @@ public class EnrollmentService {
 
     // Update enrollment status
     @Transactional
-    public Enrollment updateStatus(UUID enrollmentId, String status) {
+    public Enrollment updateStatus(UUID enrollmentId, EnrollmentStatus status) {
         Enrollment enrollment = getEnrollmentById(enrollmentId);
         enrollment.setStatus(status);
+        return enrollmentRepository.save(enrollment);
+    }
+
+    // Student API: fetch approved enrollments for student
+    public List<Enrollment> getApprovedEnrollmentsForStudent(UUID studentId) {
+        studentService.getStudentById(studentId);
+        return enrollmentRepository.findByStudentIdAndStatus(studentId, EnrollmentStatus.APPROVED);
+    }
+
+    // Admin API: pending enrollments
+    public List<Enrollment> getPendingEnrollments() {
+        return enrollmentRepository.findByStatus(EnrollmentStatus.REQUESTED);
+    }
+
+    // Admin API: approve enrollment
+    @Transactional
+    public Enrollment approveEnrollment(UUID enrollmentId) {
+        Enrollment enrollment = getEnrollmentById(enrollmentId);
+        enrollment.setStatus(EnrollmentStatus.APPROVED);
+        enrollment.setApprovedAt(LocalDateTime.now());
+        return enrollmentRepository.save(enrollment);
+    }
+
+    // Admin API: reject enrollment
+    @Transactional
+    public Enrollment rejectEnrollment(UUID enrollmentId) {
+        Enrollment enrollment = getEnrollmentById(enrollmentId);
+        enrollment.setStatus(EnrollmentStatus.REJECTED);
+        enrollment.setApprovedAt(null);
         return enrollmentRepository.save(enrollment);
     }
 

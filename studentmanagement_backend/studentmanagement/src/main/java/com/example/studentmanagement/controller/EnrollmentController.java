@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.studentmanagement.dto.EnrollmentStatusResponse;
 import com.example.studentmanagement.model.Enrollment;
+import com.example.studentmanagement.model.EnrollmentStatus;
 import com.example.studentmanagement.service.EnrollmentService;
 
 @RestController
@@ -39,7 +41,7 @@ public class EnrollmentController {
     public ResponseEntity<Enrollment> enrollStudent(@RequestBody Map<String, UUID> request) {
         UUID studentId = request.get("studentId");
         UUID courseId = request.get("courseId");
-        Enrollment enrollment = enrollmentService.enrollStudent(studentId, courseId);
+        Enrollment enrollment = enrollmentService.requestEnrollment(studentId, courseId);
         return ResponseEntity.status(HttpStatus.CREATED).body(enrollment);
     }
 
@@ -75,11 +77,28 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollments);
     }
 
+    // GET: Get enrollment by studentId + courseId (useful for checking status/enrollmentDate)
+    @GetMapping("/student/{studentId}/course/{courseId}")
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
+    public ResponseEntity<EnrollmentStatusResponse> getEnrollmentByStudentAndCourse(@PathVariable UUID studentId,
+            @PathVariable UUID courseId) {
+        Enrollment e = enrollmentService.getEnrollmentByStudentAndCourse(studentId, courseId);
+        EnrollmentStatusResponse dto = new EnrollmentStatusResponse(
+                e.getId(),
+                e.getStudent() != null ? e.getStudent().getId() : null,
+                e.getCourse() != null ? e.getCourse().getId() : null,
+                e.getStatus(),
+                e.getEnrollmentDate(),
+                e.getApprovedAt());
+        return ResponseEntity.ok(dto);
+    }
+
     // GET: Get enrollments by status
     @GetMapping("/status/{status}")
     @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
     public ResponseEntity<List<Enrollment>> getEnrollmentsByStatus(@PathVariable String status) {
-        List<Enrollment> enrollments = enrollmentService.getEnrollmentsByStatus(status);
+        EnrollmentStatus parsed = EnrollmentStatus.valueOf(status.trim().toUpperCase());
+        List<Enrollment> enrollments = enrollmentService.getEnrollmentsByStatus(parsed);
         return ResponseEntity.ok(enrollments);
     }
 
@@ -97,7 +116,8 @@ public class EnrollmentController {
     @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
     public ResponseEntity<Enrollment> updateStatus(@PathVariable UUID id, @RequestBody Map<String, String> request) {
         String status = request.get("status");
-        Enrollment enrollment = enrollmentService.updateStatus(id, status);
+        EnrollmentStatus parsed = EnrollmentStatus.valueOf(status.trim().toUpperCase());
+        Enrollment enrollment = enrollmentService.updateStatus(id, parsed);
         return ResponseEntity.ok(enrollment);
     }
 

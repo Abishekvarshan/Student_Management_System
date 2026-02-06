@@ -53,35 +53,64 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        body.put("error", "Internal Server Error");
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
         body.put("message", ex.getMessage());
 
-        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
-// Add to GlobalExceptionHandler.java
 
-@ExceptionHandler(EnrollmentAlreadyExistsException.class)
-public ResponseEntity<Map<String, Object>> handleEnrollmentAlreadyExists(EnrollmentAlreadyExistsException ex) {
-    Map<String, Object> body = new LinkedHashMap<>();
-    body.put("timestamp", LocalDateTime.now());
-    body.put("status", HttpStatus.CONFLICT.value());
-    body.put("error", "Conflict");
-    body.put("message", ex.getMessage());
-    
-    return new ResponseEntity<>(body, HttpStatus.CONFLICT);
-}
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.UNAUTHORIZED.value());
+        body.put("error", "Unauthorized");
+        body.put("message", ex.getMessage());
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    }
 
-@ExceptionHandler(EnrollmentNotFoundException.class)
-public ResponseEntity<Map<String, Object>> handleEnrollmentNotFound(EnrollmentNotFoundException ex) {
-    Map<String, Object> body = new LinkedHashMap<>();
-    body.put("timestamp", LocalDateTime.now());
-    body.put("status", HttpStatus.NOT_FOUND.value());
-    body.put("error", "Not Found");
-    body.put("message", ex.getMessage());
-    
-    return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
-}
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("message", ex.getMessage());
+        return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+        body.put("message", ex.getMessage());
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(EnrollmentAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleEnrollmentAlreadyExists(EnrollmentAlreadyExistsException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(EnrollmentNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleEnrollmentNotFound(EnrollmentNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
     // Generic Exception
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {

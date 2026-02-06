@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.example.studentmanagement.model.Course;
 import com.example.studentmanagement.model.Enrollment;
+import com.example.studentmanagement.model.EnrollmentStatus;
 import com.example.studentmanagement.model.Student;
 
 @Repository
@@ -22,6 +23,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
     
     // Find enrollment by student and course
     Optional<Enrollment> findByStudentAndCourse(Student student, Course course);
+
+    Optional<Enrollment> findByStudentIdAndCourseId(UUID studentId, UUID courseId);
     
     // Find enrollments by student ID
     List<Enrollment> findByStudentId(UUID studentId);
@@ -30,8 +33,13 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
     List<Enrollment> findByCourseId(UUID courseId);
     
     // Find enrollments by status
-    List<Enrollment> findByStatus(String status);
+    List<Enrollment> findByStatus(EnrollmentStatus status);
     
     // Check if student is already enrolled in a course
     boolean existsByStudentAndCourse(Student student, Course course);
+
+    // For student API
+    boolean existsByStudentIdAndCourseId(UUID studentId, UUID courseId);
+
+    List<Enrollment> findByStudentIdAndStatus(UUID studentId, EnrollmentStatus status);
 }

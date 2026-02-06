@@ -1,6 +1,7 @@
 package com.example.studentmanagement.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -9,6 +10,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -36,14 +39,18 @@ public class Enrollment {
     private String grade;  // e.g., "A", "B+", "C"
 
     @Column(name = "status")
-    private String status;  // e.g., "ACTIVE", "COMPLETED", "DROPPED"
+    @Enumerated(EnumType.STRING)
+    private EnrollmentStatus status;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
 
     // Default constructor
     public Enrollment() {
     }
 
     // Constructor
-    public Enrollment(Student student, Course course, LocalDate enrollmentDate, String status) {
+    public Enrollment(Student student, Course course, LocalDate enrollmentDate, EnrollmentStatus status) {
         this.student = student;
         this.course = course;
         this.enrollmentDate = enrollmentDate;
@@ -91,12 +98,20 @@ public class Enrollment {
         this.grade = grade;
     }
 
-    public String getStatus() {
+    public EnrollmentStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(EnrollmentStatus status) {
         this.status = status;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
     }
 
     @Override
@@ -108,6 +123,7 @@ public class Enrollment {
                 ", enrollmentDate=" + enrollmentDate +
                 ", grade='" + grade + '\'' +
                 ", status='" + status + '\'' +
+                ", approvedAt='" + approvedAt + '\'' +
                 '}';
     }
 }
