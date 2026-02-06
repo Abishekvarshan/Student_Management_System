@@ -41,6 +41,14 @@ public class StudentService {
                 .orElseThrow(() -> new RuntimeException("Student not found with id: " + id));
     }
 
+    public Student getStudentByEmail(String email) {
+        Student student = studentRepository.findByEmail(email);
+        if (student == null) {
+            throw new RuntimeException("Student not found with email: " + email);
+        }
+        return student;
+    }
+
     // Update student
     public Student updateStudent(UUID id, Student studentDetails) {  // Changed from Long to UUID
         Student student = getStudentById(id);

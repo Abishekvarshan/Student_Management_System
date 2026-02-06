@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,7 @@ public class EnrollmentController {
 
     // POST: Enroll a student in a course
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
     public ResponseEntity<Enrollment> enrollStudent(@RequestBody Map<String, UUID> request) {
         UUID studentId = request.get("studentId");
         UUID courseId = request.get("courseId");
@@ -43,6 +45,7 @@ public class EnrollmentController {
 
     // GET: Get all enrollments
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
     public ResponseEntity<List<Enrollment>> getAllEnrollments() {
         List<Enrollment> enrollments = enrollmentService.getAllEnrollments();
         return ResponseEntity.ok(enrollments);
@@ -50,6 +53,7 @@ public class EnrollmentController {
 
     // GET: Get enrollment by ID
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
     public ResponseEntity<Enrollment> getEnrollmentById(@PathVariable UUID id) {
         Enrollment enrollment = enrollmentService.getEnrollmentById(id);
         return ResponseEntity.ok(enrollment);
@@ -57,6 +61,7 @@ public class EnrollmentController {
 
     // GET: Get enrollments by student ID
     @GetMapping("/student/{studentId}")
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE','STUDENT')")
     public ResponseEntity<List<Enrollment>> getEnrollmentsByStudent(@PathVariable UUID studentId) {
         List<Enrollment> enrollments = enrollmentService.getEnrollmentsByStudentId(studentId);
         return ResponseEntity.ok(enrollments);
@@ -64,6 +69,7 @@ public class EnrollmentController {
 
     // GET: Get enrollments by course ID
     @GetMapping("/course/{courseId}")
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
     public ResponseEntity<List<Enrollment>> getEnrollmentsByCourse(@PathVariable UUID courseId) {
         List<Enrollment> enrollments = enrollmentService.getEnrollmentsByCourseId(courseId);
         return ResponseEntity.ok(enrollments);
@@ -71,6 +77,7 @@ public class EnrollmentController {
 
     // GET: Get enrollments by status
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
     public ResponseEntity<List<Enrollment>> getEnrollmentsByStatus(@PathVariable String status) {
         List<Enrollment> enrollments = enrollmentService.getEnrollmentsByStatus(status);
         return ResponseEntity.ok(enrollments);
@@ -78,6 +85,7 @@ public class EnrollmentController {
 
     // PATCH: Update grade
     @PatchMapping("/{id}/grade")
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
     public ResponseEntity<Enrollment> updateGrade(@PathVariable UUID id, @RequestBody Map<String, String> request) {
         String grade = request.get("grade");
         Enrollment enrollment = enrollmentService.updateGrade(id, grade);
@@ -86,6 +94,7 @@ public class EnrollmentController {
 
     // PATCH: Update status
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
     public ResponseEntity<Enrollment> updateStatus(@PathVariable UUID id, @RequestBody Map<String, String> request) {
         String status = request.get("status");
         Enrollment enrollment = enrollmentService.updateStatus(id, status);
@@ -94,6 +103,7 @@ public class EnrollmentController {
 
     // DELETE: Delete enrollment
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteEnrollment(@PathVariable UUID id) {
         enrollmentService.deleteEnrollment(id);
         return ResponseEntity.noContent().build();
@@ -101,6 +111,7 @@ public class EnrollmentController {
 
     // DELETE: Unenroll student from course
     @DeleteMapping("/student/{studentId}/course/{courseId}")
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE')")
     public ResponseEntity<Void> unenrollStudent(@PathVariable UUID studentId, @PathVariable UUID courseId) {
         enrollmentService.unenrollStudent(studentId, courseId);
         return ResponseEntity.noContent().build();

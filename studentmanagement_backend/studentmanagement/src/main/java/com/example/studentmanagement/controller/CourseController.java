@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +32,7 @@ public class CourseController {
 
     // CREATE
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Course> createCourse(@RequestBody Course course) {
         course.setId(null); // 🔥 prevent accidental merge
         Course created = courseService.addCourse(course);
@@ -39,18 +41,21 @@ public class CourseController {
 
     // READ ALL
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE','STUDENT')")
     public ResponseEntity<List<Course>> getAllCourses() {
         return ResponseEntity.ok(courseService.getAllCourses());
     }
 
     // READ BY ID
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE','STUDENT')")
     public ResponseEntity<Course> getCourseById(@PathVariable UUID id) {
         return ResponseEntity.ok(courseService.getCourseById(id));
     }
 
     // UPDATE
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Course> updateCourse(
             @PathVariable UUID id,
             @RequestBody Course course) {
@@ -61,6 +66,7 @@ public class CourseController {
 
     // DELETE
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCourse(@PathVariable UUID id) {
         courseService.deleteCourse(id);
         return ResponseEntity.noContent().build();
@@ -68,6 +74,7 @@ public class CourseController {
 
     // EXISTS
     @GetMapping("/exists/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','LECTURE','STUDENT')")
     public ResponseEntity<Boolean> courseExists(@PathVariable UUID id) {
         return ResponseEntity.ok(courseService.courseExists(id));
     }
